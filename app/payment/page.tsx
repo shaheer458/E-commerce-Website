@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 // import { Elements, useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
@@ -71,7 +70,9 @@ const CheckoutForm = ({ totalPrice, cart, userData, setUserData }: { totalPrice:
 
       // Redirect to payment2 page
       setTimeout(() => {
-        window.location.href = "/payment2";
+        if (typeof window !== "undefined") {
+          window.location.href = "/payment2";
+        }
       }, 2000);
     } catch (error: any) {
       console.error("❌ Error Storing Booking in Sanity:", error);
@@ -129,7 +130,16 @@ const CheckoutForm = ({ totalPrice, cart, userData, setUserData }: { totalPrice:
 
 const Payment = () => {
   const searchParams = useSearchParams();
-  const initialCart = JSON.parse(searchParams.get("cart") || "[]") as Car[];
+  
+  const initialCart: Car[] = (() => {
+    try {
+      return JSON.parse(searchParams.get("cart") || "[]") as Car[];
+    } catch (error) {
+      console.error("Error parsing cart data:", error);
+      return [];
+    }
+  })();
+
   const initialTotalPrice = searchParams.get("totalPrice") || "0";
 
   const [userData, setUserData] = useState({
