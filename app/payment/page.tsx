@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 
 interface Car {
@@ -123,20 +122,9 @@ const CheckoutForm = ({
   );
 };
 
-const PaymentContentWithParams = () => {
-  const searchParams = useSearchParams(); // ✅ Moved here inside a Suspense wrapper
-
-  const initialCart: Car[] = (() => {
-    try {
-      return JSON.parse(searchParams.get("cart") || "[]") as Car[];
-    } catch (error) {
-      console.error("Error parsing cart data:", error);
-      return [];
-    }
-  })();
-
-  const initialTotalPrice = searchParams.get("totalPrice") || "0";
-
+const PaymentContent = () => {
+  const [cart, setCart] = useState<Car[]>([]);
+  const [totalPrice, setTotalPrice] = useState("0");
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -148,10 +136,20 @@ const PaymentContentWithParams = () => {
     rentalDuration: 1,
   });
 
-  return <PaymentContent cart={initialCart} totalPrice={initialTotalPrice} userData={userData} setUserData={setUserData} />;
-};
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
 
-const PaymentContent = ({ cart, totalPrice, userData, setUserData }: { cart: Car[]; totalPrice: string; userData: any; setUserData: any }) => {
+      try {
+        const cartData = JSON.parse(searchParams.get("cart") || "[]") as Car[];
+        setCart(cartData);
+        setTotalPrice(searchParams.get("totalPrice") || "0");
+      } catch (error) {
+        console.error("Error parsing cart data:", error);
+      }
+    }
+  }, []);
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-2xl font-bold text-gray-700 mb-6">Booking Form</h2>
@@ -163,7 +161,7 @@ const PaymentContent = ({ cart, totalPrice, userData, setUserData }: { cart: Car
 const Payment = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <PaymentContentWithParams />
+      <PaymentContent />
     </Suspense>
   );
 };
