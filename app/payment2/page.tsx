@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import CheckoutPage from "@/components/CheckoutPage";
 import convertToSubcurrency from "@/lib/convertToSubcurrency";
@@ -20,7 +19,7 @@ if (!process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY) {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
-export default function Home() {
+export default function Payment() {
   const [booking, setBooking] = useState<{ name: string; totalPrice: number } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -38,7 +37,7 @@ export default function Home() {
   }, []);
 
   if (!booking) {
-    return <p className="text-white text-center p-10">Loading...</p>;
+    return <p className="text-white text-center p-10">Loading latest booking...</p>;
   }
 
   const handleConfirmBooking = () => {
@@ -50,11 +49,10 @@ export default function Home() {
   return (
     <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md bg-gradient-to-tr from-slate-400 to-zinc-900">
       <div className="mb-10">
-        <h1 className="text-4xl font-extrabold mb-2">Select and Pay</h1>
         <h2 className="text-2xl">
-          Payment
-          <span className="font-bold"></span>
+          Mr/Mrs <span className="font-bold">{booking.name}</span>
         </h2>
+        <p className="text-lg font-semibold">Your Total Price is ${booking.totalPrice}</p>
       </div>
 
       {!isConfirmed && !paymentSuccess ? (
