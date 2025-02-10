@@ -69,7 +69,7 @@ const CheckoutForm = ({
         if (typeof window !== "undefined") {
           window.location.href = "/payment2";
         }
-      }, 2000);
+      }, 1000);
     } catch (error: any) {
       console.error("❌ Error Storing Booking in Sanity:", error);
       setErrorMessage("Error: " + error.message);
