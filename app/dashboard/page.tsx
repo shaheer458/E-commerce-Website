@@ -4,20 +4,16 @@ import { client } from "@/sanity/lib/client";
 
 // Sidebar Component
 const Sidebar = ({ onLogout, setActiveSection }: { onLogout: () => void, setActiveSection: (section: string) => void }) => (
-  <div className="w-full bg-gray-800 text-white p-4 top-[110px] left-0 z-50 h-auto sm:h-24 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-    <h2 className="text-2xl text-center mt-3 sm:text-left">Admin Panel</h2>
-    <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center sm:justify-end w-full sm:w-auto">
+  <div className="w-full bg-gray-800 text-white p-4 fixed top-0 left-0 z-50 sm:relative flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <h2 className="text-2xl text-center sm:text-left">Admin Panel</h2>
+    <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center sm:justify-end w-full sm:w-auto mt-2 sm:mt-0">
+      {["dashboard", "bookings", "cars"].map((section) => (
+        <li key={section}>
+          <button onClick={() => setActiveSection(section)} className="text-white text-lg">{section.charAt(0).toUpperCase() + section.slice(1)}</button>
+        </li>
+      ))}
       <li>
-        <button onClick={() => setActiveSection("dashboard")} className="text-white">Dashboard</button>
-      </li>
-      <li>
-        <button onClick={() => setActiveSection("bookings")} className="text-white">Bookings</button>
-      </li>
-      <li>
-        <button onClick={() => setActiveSection("cars")} className="text-white">Car Data</button>
-      </li>
-      <li>
-        <button onClick={onLogout} className="bg-red-500 text-white py-2 px-6 rounded">Logout</button>
+        <button onClick={onLogout} className="bg-red-500 text-white py-2 px-6 rounded w-full sm:w-auto">Logout</button>
       </li>
     </ul>
   </div>
@@ -232,19 +228,16 @@ const Dashboard = () => {
   };
 
   return isAuthenticated ? (
-    <div className="pt-16 w-full p-6">
+    <div className="pt-24 px-4 sm:px-8 w-full">
       <Sidebar onLogout={handleLogout} setActiveSection={setActiveSection} />
 
       {activeSection === "dashboard" && (
-  <div className="mb-6 p-4 bg-gray-100 rounded-lg shadow-md">
-    <h2 className="text-xl font-semibold mb-2">Today's Activity</h2>
-    {loadingBookings ? (
-      <p>Loading booking details...</p>
-    ) : (
-      <p className="text-lg">Users Who Booked Today: {dailyBookings}</p>
-    )}
-  </div>
-)}
+        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-2">Today's Activity</h2>
+          {loadingBookings ? <p>Loading...</p> : <p className="text-lg">Users Who Booked Today: {dailyBookings}</p>}
+        </div>
+      )}
+
 
 
       {/* Add New Car Section */}
@@ -350,7 +343,8 @@ const Dashboard = () => {
       {loadingCars ? (
         <div>Loading cars...</div>
       ) : (
-        <table className="table-auto w-full border-collapse border">
+        <div className="overflow-x-auto">
+          <table className="table-auto w-full border-collapse border text-sm sm:text-base">
           <thead>
             <tr>
               <th className="border px-4 py-2">Car Name</th>
@@ -391,6 +385,7 @@ const Dashboard = () => {
             ))}
           </tbody>
         </table>
+        </div>
       )}
         </>
       )}
@@ -402,7 +397,8 @@ const Dashboard = () => {
 {loadingBookings ? (
   <div>Loading bookings...</div>
 ) : (
-  <table className="table-auto w-full border-collapse border">
+  <div className="overflow-x-auto">
+    <table className="table-auto w-full border-collapse border text-sm sm:text-base">
     <thead>
       <tr>
         <th className="border px-4 py-2">Name</th>
@@ -458,6 +454,7 @@ const Dashboard = () => {
       ))}
     </tbody>
   </table>
+  </div>
 )}
         </>
       )}
