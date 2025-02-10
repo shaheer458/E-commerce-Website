@@ -3,27 +3,23 @@ import React, { useEffect, useState } from "react";
 import { client } from "@/sanity/lib/client";
 
 // Sidebar Component
-const Sidebar = ({ onLogout }: { onLogout: () => void }) => (
-  <div>
-    <div className="w-full bg-gray-800 text-white p-4 top-[110px] left-0 z-50 h-auto sm:h-24 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-      <h2 className="text-2xl text-center mt-3 sm:text-left">Admin Panel</h2>
-      <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center sm:justify-end w-full sm:w-auto">
-        <li>
-          <a href="/dashboard" className="text-white">Dashboard</a>
-        </li>
-        <li>
-          <a href="/dashboard" className="text-white">Bookings</a>
-        </li>
-        <li>
-          <a href="/dashboard" className="text-white">Car Data</a>
-        </li>
-        <li>
-          <button onClick={onLogout} className="bg-red-500 text-white py-2 px-6 rounded block sm:text-left">
-            Logout
-          </button>
-        </li>
-      </ul>
-    </div>
+const Sidebar = ({ onLogout, setActiveSection }: { onLogout: () => void, setActiveSection: (section: string) => void }) => (
+  <div className="w-full bg-gray-800 text-white p-4 top-[110px] left-0 z-50 h-auto sm:h-24 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <h2 className="text-2xl text-center mt-3 sm:text-left">Admin Panel</h2>
+    <ul className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center sm:justify-end w-full sm:w-auto">
+      <li>
+        <button onClick={() => setActiveSection("dashboard")} className="text-white">Dashboard</button>
+      </li>
+      <li>
+        <button onClick={() => setActiveSection("bookings")} className="text-white">Bookings</button>
+      </li>
+      <li>
+        <button onClick={() => setActiveSection("cars")} className="text-white">Car Data</button>
+      </li>
+      <li>
+        <button onClick={onLogout} className="bg-red-500 text-white py-2 px-6 rounded">Logout</button>
+      </li>
+    </ul>
   </div>
 );
 
@@ -31,9 +27,11 @@ const Dashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [bookings, setBookings] = useState<any[]>([]);
   const [cars, setCars] = useState<any[]>([]);
-  const [loadingBookings, setLoadingBookings] = useState(true);
   const [loadingCars, setLoadingCars] = useState(true);
-
+  const [activeSection, setActiveSection] = useState("dashboard");
+  const [dailyBookings, setDailyBookings] = useState(0);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  
   const [carData, setCarData] = useState({
     name: "",
     brand: "",
@@ -47,7 +45,26 @@ const Dashboard = () => {
     tags: [],
     image: null,
   });
-
+  const fetchDailyBookings = async () => {
+    try {
+      setLoadingBookings(true);
+      const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+  
+      // Query Sanity for bookings made today
+      const query = `*[_type == 'booking' && bookingDate >= '${today}T00:00:00' && bookingDate <= '${today}T23:59:59']{email}`;
+      const bookings = await client.fetch(query);
+  
+      // Count unique users based on email
+      const uniqueUsers = new Set(bookings.map((b : any) => b.email));
+      setDailyBookings(uniqueUsers.size);
+  
+      setLoadingBookings(false);
+    } catch (error) {
+      console.error("Error fetching daily bookings:", error);
+      setLoadingBookings(false);
+    }
+  };
+  
   const [bookingData, setBookingData] = useState({
     fullName: "",
     email: "",
@@ -193,7 +210,18 @@ const Dashboard = () => {
       console.error("Error deleting car:", error);
     }
   };
-
+  useEffect(() => {
+    const isAdmin = localStorage.getItem("admin");
+    if (isAdmin !== "true") {
+      window.location.href = "/login";
+    } else {
+      setIsAuthenticated(true);
+      fetchBookings();
+      fetchCars();
+      fetchDailyBookings(); // Fetch daily bookings
+    }
+  }, []);
+  
   const handleBookingDelete = async (bookingId: string) => {
     try {
       await client.delete(bookingId);
@@ -205,12 +233,24 @@ const Dashboard = () => {
 
   return isAuthenticated ? (
     <div className="pt-16 w-full p-6">
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar onLogout={handleLogout} setActiveSection={setActiveSection} />
 
-      <h1 className="text-3xl mb-4">Admin Dashboard</h1>
+      {activeSection === "dashboard" && (
+  <div className="mb-6 p-4 bg-gray-100 rounded-lg shadow-md">
+    <h2 className="text-xl font-semibold mb-2">Today's Activity</h2>
+    {loadingBookings ? (
+      <p>Loading booking details...</p>
+    ) : (
+      <p className="text-lg">Users Who Booked Today: {dailyBookings}</p>
+    )}
+  </div>
+)}
+
 
       {/* Add New Car Section */}
-      <h2 className="text-xl mb-4 mt-4">Add New Car</h2>
+      {activeSection === "cars" && (
+        <>
+        <h2 className="text-xl mb-4 mt-4">Add New Car</h2>
       <form onSubmit={handleCarSubmit} className="mb-6 space-y-4">
         <input
           type="text"
@@ -352,9 +392,13 @@ const Dashboard = () => {
           </tbody>
         </table>
       )}
+        </>
+      )}
 
       {/* Booking Data Table */}
-<h2 className="text-xl mb-4 mt-4">Bookings</h2>
+      {activeSection === "bookings" && (
+        <>
+        <h2 className="text-xl mb-4 mt-4">Bookings</h2>
 {loadingBookings ? (
   <div>Loading bookings...</div>
 ) : (
@@ -415,6 +459,8 @@ const Dashboard = () => {
     </tbody>
   </table>
 )}
+        </>
+      )}
 
     </div>
   ) : (
