@@ -233,7 +233,7 @@ const Dashboard = () => {
 
       {activeSection === "dashboard" && (
         <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-2">Today's Activity</h2>
+          <h2 className="text-xl font-semibold mb-2">Todays Activity</h2>
           {loadingBookings ? <p>Loading...</p> : <p className="text-lg">Users Who Booked Today: {dailyBookings}</p>}
         </div>
       )}
